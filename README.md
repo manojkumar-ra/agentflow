@@ -1,5 +1,13 @@
 # AgentFlow - AI-Powered Task Agent
 
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq_AI-000000?style=for-the-badge)
+![ChromaDB](https://img.shields.io/badge/ChromaDB-FF6F61?style=for-the-badge)
+![Sentence Transformers](https://img.shields.io/badge/Sentence_Transformers-4285F4?style=for-the-badge)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+
 An autonomous AI agent that takes a task, breaks it down into steps, picks the right tools, and solves it — all on its own. Built with FastAPI, Groq AI (LLaMA 3.3 70B), ChromaDB for RAG, and MySQL.
 
 ## What It Does
