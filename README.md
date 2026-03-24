@@ -17,7 +17,17 @@ The agent decides which tool to use at each step, analyzes the result, and keeps
 
 ## Screenshots
 
-_coming soon_
+### Hero
+![Hero](screenshots/hero.png)
+
+### Agent Steps
+![Agent Steps](screenshots/agent_steps.png)
+
+### RAG - Document Upload
+![RAG Upload](screenshots/rag_upload.png)
+
+### Task History
+![History](screenshots/history.png)
 
 ## Tech Stack
 
