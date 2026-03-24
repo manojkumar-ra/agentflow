@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentFlow - AI Task Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #10b981;
+            --primary-dim: rgba(16, 185, 129, 0.15);
+            --bg: #050a0e;
+            --surface: #0b1117;
+            --surface2: #111a22;
+            --border: #1a2733;
+            --text: #d1d5db;
+            --text-dim: #6b7280;
+            --accent-blue: #38bdf8;
+            --accent-purple: #a78bfa;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #1a2733; border-radius: 3px; }
+
+        /* navbar */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.8rem 2rem;
+            background: rgba(5, 10, 14, 0.95);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .logo { display: flex; align-items: center; gap: 0.6rem; }
+        .logo-icon {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-icon svg { width: 20px; height: 20px; fill: #050a0e; }
+        .logo-name {
+            font-size: 1.25rem; font-weight: 700; color: #f1f5f9;
+            letter-spacing: -0.3px;
+        }
+        .logo-name span { color: var(--primary); }
+        .logo-sub {
+            font-size: 0.65rem; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-top: -2px;
+        }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a {
+            color: var(--text-dim); font-size: 0.82rem; text-decoration: none;
+            cursor: pointer; transition: color 0.2s; font-weight: 500;
+        }
+        .nav-links a:hover { color: var(--primary); }
+
+        /* hero */
+        .hero {
+            text-align: center; padding: 4rem 2rem 2rem;
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: -50px; left: 50%;
+            transform: translateX(-50%);
+            width: 500px; height: 350px;
+            background: radial-gradient(ellipse, rgba(16, 185, 129, 0.07) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        /* terminal cursor animation */
+        .terminal-line {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 0.5rem 1.2rem; border-radius: 20px;
+            margin-bottom: 1.5rem;
+            font-family: 'Fira Code', monospace; font-size: 0.78rem;
+        }
+        .terminal-line .prompt { color: var(--primary); }
+        .terminal-line .cmd { color: var(--text-dim); }
+        .cursor-blink {
+            display: inline-block; width: 7px; height: 14px;
+            background: var(--primary); animation: cursorBlink 1s step-end infinite;
+        }
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .hero h1 {
+            font-size: 2.8rem; font-weight: 700; color: #f1f5f9;
+            line-height: 1.15; margin-bottom: 0.8rem;
+        }
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, #10b981, #34d399, #6ee7b7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            color: var(--text-dim); font-size: 1rem;
+            max-width: 480px; margin: 0 auto; line-height: 1.6;
+        }
+
+        /* tools badges in hero */
+        .tool-badges {
+            display: flex; justify-content: center; gap: 0.5rem;
+            margin-top: 1.5rem; flex-wrap: wrap;
+        }
+        .tool-badge {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem; padding: 0.3rem 0.7rem;
+            border-radius: 6px; border: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .tool-badge.s { color: var(--accent-blue); border-color: rgba(56, 189, 248, 0.2); }
+        .tool-badge.p { color: var(--primary); border-color: rgba(16, 185, 129, 0.2); }
+        .tool-badge.c { color: var(--accent-purple); border-color: rgba(167, 139, 250, 0.2); }
+        .tool-badge.w { color: var(--accent-amber); border-color: rgba(251, 191, 36, 0.2); }
+        .tool-badge.t { color: var(--accent-rose); border-color: rgba(251, 113, 133, 0.2); }
+        .tool-badge.d { color: #f472b6; border-color: rgba(244, 114, 182, 0.2); }
+
+        /* main layout */
+        .main-wrapper {
+            max-width: 820px; margin: 1.5rem auto; padding: 0 1.5rem;
+        }
+
+        /* task input */
+        .task-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem;
+            transition: border-color 0.3s;
+        }
+        .task-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08); }
+
+        .input-label {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.72rem; color: var(--primary);
+            margin-bottom: 0.6rem; display: flex; align-items: center; gap: 6px;
+        }
+        .input-label::before { content: '>'; font-weight: bold; }
+
+        .task-input {
+            width: 100%; background: none; border: none; outline: none;
+            color: #f1f5f9; font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem; resize: none; min-height: 55px;
+            line-height: 1.6;
+        }
+        .task-input::placeholder { color: #374151; }
+
+        .input-bottom {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 0.8rem; padding-top: 0.8rem;
+            border-top: 1px solid var(--border);
+        }
+        .step-info {
+            color: var(--text-dim); font-size: 0.75rem;
+            font-family: 'Fira Code', monospace;
+        }
+        .run-btn {
+            background: var(--primary); color: #050a0e;
+            border: none; padding: 0.6rem 2rem;
+            border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+            cursor: pointer; transition: all 0.2s;
+            font-family: 'Space Grotesk', sans-serif;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .run-btn:hover { background: #34d399; transform: translateY(-1px); }
+        .run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+        /* sample chips */
+        .samples {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+            margin-top: 0.8rem;
+        }
+        .chip {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 0.35rem 0.75rem; border-radius: 6px;
+            font-size: 0.72rem; color: var(--text-dim);
+            cursor: pointer; transition: all 0.2s;
+            font-family: 'Fira Code', monospace;
+        }
+        .chip:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* execution area */
+        .exec-area { margin-top: 2rem; display: none; }
+        .exec-area.show { display: block; }
+
+        .exec-header {
+            display: flex; align-items: center; gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+        .exec-line {
+            height: 1px; flex: 1; background: var(--border);
+        }
+        .exec-tag {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.72rem; color: var(--primary);
+            background: var(--primary-dim);
+            padding: 0.2rem 0.7rem; border-radius: 4px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .exec-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--primary);
+        }
+        .exec-dot.active { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        }
+
+        /* timeline steps */
+        .steps-list {
+            position: relative;
+            padding-left: 24px;
+        }
+        .steps-list::before {
+            content: ''; position: absolute; left: 7px; top: 0;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--border));
+            border-radius: 1px;
+        }
+
+        .step {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 0.8rem;
+            animation: slideIn 0.3s ease-out;
+        }
+        .step::before {
+            content: ''; position: absolute; left: -21px; top: 18px;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--primary); border: 2px solid var(--bg);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step-top {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .step-num {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.68rem; font-weight: 600;
+            color: var(--bg); background: var(--primary);
+            padding: 0.12rem 0.5rem; border-radius: 4px;
+        }
+        .step-label { font-size: 0.76rem; color: var(--text-dim); }
+
+        .step-body { padding: 0.9rem 1rem; }
+
+        .thought-text {
+            font-size: 0.85rem; color: #9ca3af; line-height: 1.65;
+            padding-left: 0.8rem;
+            border-left: 2px solid var(--border);
+        }
+
+        /* tool cards */
+        .tool-section { margin-top: 0.7rem; }
+        .tool-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-bottom: 0.4rem;
+        }
+        .tool-tag {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem; font-weight: 500;
+            padding: 0.2rem 0.55rem; border-radius: 4px;
+        }
+        .tool-tag.search { background: rgba(56, 189, 248, 0.1); color: var(--accent-blue); }
+        .tool-tag.code { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+        .tool-tag.calc { background: rgba(167, 139, 250, 0.1); color: var(--accent-purple); }
+        .tool-tag.wiki { background: rgba(251, 191, 36, 0.1); color: var(--accent-amber); }
+        .tool-tag.time { background: rgba(251, 113, 133, 0.1); color: var(--accent-rose); }
+        .tool-tag.docs { background: rgba(244, 114, 182, 0.1); color: #f472b6; }
+
+        .tool-input-display {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.74rem; color: var(--text-dim);
+        }
+
+        .tool-output-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.8rem;
+            margin-top: 0.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.73rem; color: var(--primary);
+            max-height: 200px; overflow-y: auto;
+            white-space: pre-wrap; word-break: break-word;
+            line-height: 1.55;
+        }
+
+        /* final answer */
+        .answer-card {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px; padding: 1.3rem;
+            margin-top: 1rem; margin-bottom: 1rem;
+        }
+        .answer-card::before {
+            content: ''; position: absolute; left: -21px; top: 18px;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #34d399; border: 2px solid var(--bg);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+        .answer-card h3 {
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--primary); margin-bottom: 0.7rem;
+            display: flex; align-items: center; gap: 0.4rem;
+            font-family: 'Fira Code', monospace;
+        }
+        .answer-text {
+            font-size: 0.9rem; color: #e2e8f0;
+            line-height: 1.75; white-space: pre-wrap;
+        }
+
+        /* error */
+        .error-card {
+            background: var(--surface);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 10px; padding: 1.2rem;
+            margin-top: 1rem;
+        }
+        .error-card h3 { color: #ef4444; font-size: 0.82rem; margin-bottom: 0.5rem; font-family: 'Fira Code', monospace; }
+        .error-card p { color: #f87171; font-size: 0.85rem; }
+
+        /* loading */
+        .loading { display: none; padding: 2.5rem; text-align: center; }
+        .loading.show { display: block; }
+        .spinner {
+            width: 32px; height: 32px; border: 2px solid var(--border);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 0.8rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading p { color: var(--text-dim); font-size: 0.82rem; font-family: 'Fira Code', monospace; }
+
+        /* history */
+        .history-area { margin-top: 3rem; padding-bottom: 3rem; }
+        .history-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .history-title {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+        .history-line { height: 1px; flex: 1; background: var(--border); }
+
+        .history-item {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .history-item:hover { border-color: rgba(16, 185, 129, 0.3); background: var(--surface2); }
+        .history-task-text {
+            font-size: 0.85rem; color: #e2e8f0;
+            margin-bottom: 0.35rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .history-meta {
+            display: flex; gap: 0.8rem; font-size: 0.7rem; color: var(--text-dim);
+            font-family: 'Fira Code', monospace;
+        }
+        .badge {
+            padding: 0.1rem 0.45rem; border-radius: 3px;
+            font-size: 0.65rem; font-weight: 600;
+        }
+        .badge-ok { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+        .badge-fail { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .badge-run { background: rgba(56, 189, 248, 0.1); color: var(--accent-blue); }
+
+        .empty-msg {
+            text-align: center; padding: 2rem;
+            color: #374151; font-size: 0.85rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* documents section */
+        .docs-area { margin-top: 2.5rem; }
+        .docs-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .docs-title {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+        .docs-line { height: 1px; flex: 1; background: var(--border); }
+
+        .upload-zone {
+            background: var(--surface); border: 2px dashed var(--border);
+            border-radius: 12px; padding: 1.5rem; text-align: center;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .upload-zone:hover { border-color: var(--primary); background: var(--surface2); }
+        .upload-zone.dragging { border-color: var(--primary); background: rgba(16, 185, 129, 0.05); }
+        .upload-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .upload-text { color: var(--text-dim); font-size: 0.85rem; }
+        .upload-hint {
+            color: #374151; font-size: 0.72rem; margin-top: 0.3rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .doc-list { margin-top: 0.8rem; }
+        .doc-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.6rem 0.9rem;
+            margin-bottom: 0.4rem;
+        }
+        .doc-name {
+            font-size: 0.82rem; color: #e2e8f0;
+            font-family: 'Fira Code', monospace;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .doc-name .icon { color: #f472b6; }
+        .doc-delete {
+            background: none; border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444; font-size: 0.7rem; padding: 0.2rem 0.5rem;
+            border-radius: 4px; cursor: pointer; transition: all 0.2s;
+            font-family: 'Fira Code', monospace;
+        }
+        .doc-delete:hover { background: rgba(239, 68, 68, 0.1); }
+        .doc-count {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem; color: var(--text-dim);
+            margin-top: 0.5rem;
+        }
+        .doc-count span { color: var(--primary); }
+
+        .upload-progress {
+            display: none; margin-top: 0.8rem; text-align: center;
+        }
+        .upload-progress.show { display: block; }
+        .upload-progress p {
+            color: var(--primary); font-size: 0.8rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.9rem; }
+            .navbar { padding: 0.7rem 1rem; }
+            .main-wrapper { padding: 0 1rem; }
+            .steps-list { padding-left: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24"><path d="M13 3v2h-2V3h2zm4 4h2v2h-2V7zM5 7h2v2H5V7zm14 4h2v2h-2v-2zM3 11h2v2H3v-2zm14 4h2v2h-2v-2zM5 15h2v2H5v-2zm8 4v2h-2v-2h2zm-4-4h6v2H9v-2zm0-8h6v2H9V7zm-2 2h2v6H7V9zm10 0h2v6h-2V9z"/></svg>
+        </div>
+        <div>
+            <div class="logo-name">Agent<span>Flow</span></div>
+            <div class="logo-sub">AI-Powered Task Agent</div>
+        </div>
+    </div>
+    <ul class="nav-links">
+        <li><a onclick="goTo('.main-wrapper')">New Task</a></li>
+        <li><a onclick="goTo('.history-area')">History</a></li>
+    </ul>
+</nav>
+
+<section class="hero">
+    <div class="terminal-line">
+        <span class="prompt">$</span>
+        <span class="cmd">agentflow --run</span>
+        <span class="cursor-blink"></span>
+    </div>
+    <h1>Give a Task.<br><span class="gradient">Watch it Think.</span></h1>
+    <p>An autonomous AI agent that plans, picks tools, and solves your task step by step.</p>
+
+    <div class="tool-badges">
+        <span class="tool-badge s">web_search</span>
+        <span class="tool-badge p">run_python</span>
+        <span class="tool-badge c">calculator</span>
+        <span class="tool-badge w">wiki_search</span>
+        <span class="tool-badge t">get_datetime</span>
+        <span class="tool-badge d">search_documents</span>
+    </div>
+</section>
+
+<div class="main-wrapper">
+
+    <!-- task input -->
+    <div class="task-box">
+        <div class="input-label">enter task</div>
+        <textarea class="task-input" id="taskInput" placeholder="What should the agent do? Try 'Find the latest AI news and summarize it'"></textarea>
+        <div class="input-bottom">
+            <span class="step-info" id="stepInfo"></span>
+            <button class="run-btn" id="runBtn" onclick="runAgent()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                Run Agent
+            </button>
+        </div>
+    </div>
+
+    <div class="samples">
+        <span class="chip" onclick="setTask('What are the top 5 programming languages in 2025 and why')">top languages 2025</span>
+        <span class="chip" onclick="setTask('Calculate compound interest on 50000 at 7.5% for 10 years compounded annually')">compound interest</span>
+        <span class="chip" onclick="setTask('Search the latest news about artificial intelligence')">ai news</span>
+        <span class="chip" onclick="setTask('Write a Python function to find the fibonacci sequence up to n terms and test it with 10')">python fibonacci</span>
+        <span class="chip" onclick="setTask('Tell me about the history of the Internet using Wikipedia')">internet history</span>
+        <span class="chip" onclick="setTask('What day and time is it right now')">current time</span>
+        <span class="chip" onclick="setTask('Search my uploaded documents for the main topic and summarize it')">search my docs</span>
+    </div>
+
+    <!-- execution -->
+    <div class="exec-area" id="execArea">
+        <div class="exec-header">
+            <div class="exec-tag">
+                <div class="exec-dot" id="execDot"></div>
+                EXECUTING
+            </div>
+            <div class="exec-line"></div>
+        </div>
+
+        <div class="loading" id="loader">
+            <div class="spinner"></div>
+            <p>agent is thinking...</p>
+        </div>
+
+        <div class="steps-list" id="stepsList"></div>
+    </div>
+
+    <!-- documents / RAG -->
+    <div class="docs-area">
+        <div class="docs-header">
+            <span class="docs-title">knowledge base (RAG)</span>
+            <div class="docs-line"></div>
+        </div>
+
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">+</div>
+            <div class="upload-text">Drop files here or click to upload</div>
+            <div class="upload-hint">supports: .txt .pdf .docx .md .csv .json .py .js .html</div>
+            <input type="file" id="fileInput" hidden accept=".txt,.pdf,.docx,.md,.csv,.json,.py,.js,.html" multiple>
+        </div>
+
+        <div class="upload-progress" id="uploadProgress">
+            <p>uploading and processing...</p>
+        </div>
+
+        <div class="doc-list" id="docList"></div>
+        <div class="doc-count" id="docCount"></div>
+    </div>
+
+    <!-- history -->
+    <div class="history-area">
+        <div class="history-header">
+            <span class="history-title">task history</span>
+            <div class="history-line"></div>
+        </div>
+        <div id="historyList">
+            <div class="empty-msg">no tasks yet. run the agent to get started.</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const API = '';
+    let running = false;
+
+    function goTo(sel) {
+        document.querySelector(sel).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function setTask(t) {
+        document.getElementById('taskInput').value = t;
+        document.getElementById('taskInput').focus();
+    }
+
+    function esc(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    function getToolClass(name) {
+        if (name === 'web_search') return 'search';
+        if (name === 'run_python') return 'code';
+        if (name === 'calculator') return 'calc';
+        if (name === 'wiki_search') return 'wiki';
+        if (name === 'get_datetime') return 'time';
+        if (name === 'search_documents') return 'docs';
+        return 'search';
+    }
+
+    async function runAgent() {
+        const input = document.getElementById('taskInput');
+        const task = input.value.trim();
+        if (!task || running) return;
+
+        running = true;
+        document.getElementById('runBtn').disabled = true;
+        document.getElementById('runBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> Working...';
+
+        const exec = document.getElementById('execArea');
+        exec.classList.add('show');
+        document.getElementById('stepsList').innerHTML = '';
+        document.getElementById('loader').classList.add('show');
+        document.getElementById('execDot').classList.add('active');
+        document.getElementById('stepInfo').textContent = '';
+        exec.scrollIntoView({ behavior: 'smooth' });
+
+        try {
+            const res = await fetch(API + '/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task })
+            });
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+            let count = 0;
+
+            document.getElementById('loader').classList.remove('show');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buf += decoder.decode(value, { stream: true });
+                const lines = buf.split('\n');
+                buf = lines.pop();
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        if (data.type === 'done') { loadHistory(); continue; }
+                        if (data.type === 'error') { showError(data.message); continue; }
+
+                        count++;
+                        document.getElementById('stepInfo').textContent = 'step ' + count + ' / 10';
+
+                        if (data.is_final) showFinal(data);
+                        else addStep(data);
+                    } catch(e) {}
+                }
+            }
+        } catch(e) {
+            document.getElementById('loader').classList.remove('show');
+            showError('Could not connect to agent server.');
+        }
+
+        running = false;
+        document.getElementById('runBtn').disabled = false;
+        document.getElementById('runBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Run Agent';
+        document.getElementById('execDot').classList.remove('active');
+    }
+
+    function addStep(data) {
+        const list = document.getElementById('stepsList');
+        const div = document.createElement('div');
+        div.className = 'step';
+
+        let toolHtml = '';
+        if (data.tool) {
+            const cls = getToolClass(data.tool);
+            toolHtml = `
+                <div class="tool-section">
+                    <div class="tool-header">
+                        <span class="tool-tag ${cls}">${esc(data.tool)}</span>
+                        <span class="tool-input-display">${esc(String(data.tool_input || '').substring(0, 80))}</span>
+                    </div>
+                    ${data.tool_output ? `<div class="tool-output-box">${esc(String(data.tool_output).substring(0, 1500))}</div>` : ''}
+                </div>
+            `;
+        }
+
+        div.innerHTML = `
+            <div class="step-top">
+                <span class="step-num">STEP ${data.step}</span>
+                <span class="step-label">${data.tool ? 'Tool: ' + data.tool : 'Thinking'}</span>
+            </div>
+            <div class="step-body">
+                <div class="thought-text">${esc(data.thought || '')}</div>
+                ${toolHtml}
+            </div>
+        `;
+        list.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showFinal(data) {
+        const list = document.getElementById('stepsList');
+        const div = document.createElement('div');
+        div.className = 'answer-card';
+        div.innerHTML = `
+            <h3>// final_answer</h3>
+            <div class="answer-text">${esc(data.final_answer || 'No answer.')}</div>
+        `;
+        list.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showError(msg) {
+        const list = document.getElementById('stepsList');
+        const div = document.createElement('div');
+        div.className = 'error-card';
+        div.innerHTML = `<h3>// error</h3><p>${esc(msg)}</p>`;
+        list.appendChild(div);
+    }
+
+    async function loadHistory() {
+        try {
+            const res = await fetch(API + '/history');
+            const data = await res.json();
+            const list = document.getElementById('historyList');
+
+            if (!data.history || data.history.length === 0) {
+                list.innerHTML = '<div class="empty-msg">no tasks yet. run the agent to get started.</div>';
+                return;
+            }
+
+            list.innerHTML = '';
+            data.history.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+
+                let badgeCls = t.status === 'completed' ? 'badge-ok' : t.status === 'failed' ? 'badge-fail' : 'badge-run';
+
+                div.innerHTML = `
+                    <div class="history-task-text">${esc(t.task_text || '')}</div>
+                    <div class="history-meta">
+                        <span class="badge ${badgeCls}">${t.status || 'running'}</span>
+                        <span>${t.total_steps || 0} steps</span>
+                        <span>${t.created_at || ''}</span>
+                    </div>
+                `;
+                div.onclick = () => {
+                    if (t.final_answer) {
+                        const exec = document.getElementById('execArea');
+                        exec.classList.add('show');
+                        document.getElementById('stepsList').innerHTML = '';
+                        const card = document.createElement('div');
+                        card.className = 'answer-card';
+                        card.innerHTML = `
+                            <h3>// ${esc(t.task_text)}</h3>
+                            <div class="answer-text">${esc(t.final_answer)}</div>
+                        `;
+                        document.getElementById('stepsList').appendChild(card);
+                        exec.scrollIntoView({ behavior: 'smooth' });
+                    }
+                };
+                list.appendChild(div);
+            });
+        } catch(e) {}
+    }
+
+    // --- RAG / Document Upload ---
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+
+    // drag and drop
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragging');
+    });
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragging');
+    });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragging');
+        if (e.dataTransfer.files.length > 0) {
+            uploadFiles(e.dataTransfer.files);
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            uploadFiles(fileInput.files);
+            fileInput.value = '';
+        }
+    });
+
+    async function uploadFiles(files) {
+        const progress = document.getElementById('uploadProgress');
+        progress.classList.add('show');
+
+        for (const file of files) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const res = await fetch(API + '/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    alert('Upload failed: ' + (data.detail || 'unknown error'));
+                }
+            } catch(e) {
+                alert('Upload failed: could not connect to server');
+            }
+        }
+
+        progress.classList.remove('show');
+        loadDocuments();
+    }
+
+    async function loadDocuments() {
+        try {
+            const res = await fetch(API + '/documents');
+            const data = await res.json();
+            const list = document.getElementById('docList');
+            const count = document.getElementById('docCount');
+
+            if (!data.documents || data.documents.length === 0) {
+                list.innerHTML = '';
+                count.innerHTML = '';
+                return;
+            }
+
+            list.innerHTML = '';
+            data.documents.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'doc-item';
+                div.innerHTML = `
+                    <span class="doc-name"><span class="icon">~</span> ${esc(name)}</span>
+                    <button class="doc-delete" onclick="deleteDoc('${esc(name)}')">remove</button>
+                `;
+                list.appendChild(div);
+            });
+
+            count.innerHTML = `<span>${data.total_chunks}</span> chunks stored from <span>${data.documents.length}</span> file(s)`;
+        } catch(e) {}
+    }
+
+    async function deleteDoc(filename) {
+        try {
+            await fetch(API + '/documents/' + encodeURIComponent(filename), { method: 'DELETE' });
+            loadDocuments();
+        } catch(e) {}
+    }
+
+    document.getElementById('taskInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runAgent(); }
+    });
+
+    loadHistory();
+    loadDocuments();
+</script>
+</body>
+</html>

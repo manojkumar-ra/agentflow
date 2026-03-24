@@ -1,0 +1,13 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+python-dotenv==1.0.0
+groq==0.4.2
+mysql-connector-python==8.2.0
+pydantic==2.5.0
+ddgs==9.11.4
+wikipedia==1.4.0
+chromadb==1.5.5
+sentence-transformers==4.1.0
+PyPDF2==3.0.1
+python-docx==1.2.0
+python-multipart==0.0.6
