@@ -1,3 +1,14 @@
+---
+title: AgentFlow
+emoji: 🤖
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+---
+
 # AgentFlow - AI-Powered Task Agent
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -5,10 +16,10 @@
 ![Groq](https://img.shields.io/badge/Groq_AI-000000?style=for-the-badge)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-FF6F61?style=for-the-badge)
 ![Sentence Transformers](https://img.shields.io/badge/Sentence_Transformers-4285F4?style=for-the-badge)
-![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-An autonomous AI agent that takes a task, breaks it down into steps, picks the right tools, and solves it — all on its own. Built with FastAPI, Groq AI (LLaMA 3.3 70B), ChromaDB for RAG, and MySQL.
+An autonomous AI agent that takes a task, breaks it down into steps, picks the right tools, and solves it — all on its own. Built with FastAPI, Groq AI (LLaMA 3.3 70B), ChromaDB for RAG, and SQLite.
 
 ## What It Does
 
@@ -42,7 +53,7 @@ The agent decides which tool to use at each step, analyzes the result, and keeps
 - **Python + FastAPI** — Backend API with SSE streaming
 - **Groq API (LLaMA 3.3 70B)** — AI brain for reasoning and decision making
 - **ChromaDB + Sentence Transformers** — Vector database for RAG (document search)
-- **MySQL** — Task history and step logging
+- **SQLite** — Task history and step logging
 - **DuckDuckGo Search** — Web search tool
 - **Wikipedia API** — Knowledge lookup tool
 - **HTML/CSS/JavaScript** — Frontend with real-time step rendering
@@ -70,7 +81,6 @@ The agent decides which tool to use at each step, analyzes the result, and keeps
 
 ### Prerequisites
 - Python 3.10+
-- MySQL
 - Groq API key (free at https://console.groq.com)
 
 ### Installation
@@ -82,8 +92,6 @@ cd agentflow
 
 # install dependencies
 pip install -r requirements.txt
-
-# create .env file
 ```
 
 ### Environment Variables
@@ -92,10 +100,6 @@ Create a `.env` file:
 
 ```
 GROQ_API_KEY=your_groq_api_key
-MYSQL_HOST=localhost
-MYSQL_USER=root
-MYSQL_PASSWORD=your_password
-MYSQL_DATABASE=agentflow
 ```
 
 ### Run
@@ -106,6 +110,10 @@ python main.py
 
 Open `http://localhost:8001` in your browser.
 
+## Deployment
+
+This app is deployed on **Hugging Face Spaces** using Docker. The `Dockerfile` and HF config header at the top of this README handle the deployment automatically.
+
 ## Project Structure
 
 ```
@@ -114,8 +122,9 @@ agentflow/
 ├── agent.py           # AI agent loop (reasoning + tool selection)
 ├── tools.py           # All agent tools (search, python, calc, wiki, docs)
 ├── rag.py             # RAG module (ChromaDB + embeddings + document processing)
-├── database.py        # MySQL database for task history
+├── database.py        # SQLite database for task history
 ├── requirements.txt   # Python dependencies
+├── Dockerfile         # Docker config for HF Spaces
 ├── .env               # API keys (not in repo)
 ├── static/
 │   └── index.html     # Frontend UI
@@ -130,4 +139,4 @@ agentflow/
 4. AI analyzes the result and decides the next step
 5. Repeats until the AI has enough info to give a final answer
 6. All steps are streamed to the frontend in real-time via SSE
-7. Task and steps are saved to MySQL for history
+7. Task and steps are saved to SQLite for history

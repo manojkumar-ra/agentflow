@@ -7,3 +7,5 @@ venv/
 .vscode/
 chroma_db/
 sample_docs/
+agentflow.db
+*.db
